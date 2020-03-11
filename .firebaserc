@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "ingreso-egreso-app-18f32": {
+      "hosting": {
+        "ReduxLoginApp": [
+          "ingreso-egreso-app-18f32"
+        ]
+      }
+    }
+  }
+}
