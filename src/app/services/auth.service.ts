@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 // import 'firebase/firestore';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { map } from 'rxjs/operators';
-import { User } from '../models/user.model';
+import { User, DBUser } from '../models/user.model';
 // import { AngularFirestore } from '@angular/fire/firestore';
 import 'firebase/firestore'; import { AngularFirestore } from '@angular/fire/firestore';
+import { Store } from '@ngrx/store';
+import { AppState } from '../app.reducer';
+import * as userAuth from '../auth/auth.actions';
 
 
 @Injectable({
@@ -12,18 +15,32 @@ import 'firebase/firestore'; import { AngularFirestore } from '@angular/fire/fir
 })
 export class AuthService {
 
+  userFSub$;
+
   constructor(
     private authFirebase: AngularFireAuth,
-    private firestore: AngularFirestore
+    private firestore: AngularFirestore,
+    private store: Store<AppState>
   ) {
 
   }
 
   initAuthListener() {
     this.authFirebase.authState.subscribe( fUser => {
-      console.log( fUser );
       console.log( fUser?.uid );
-      console.log( fUser?.email );
+      if ( fUser ) {
+        this.userFSub$ = this.firestore.doc(`${ fUser.uid }/user`).valueChanges()
+          .subscribe( (fDBUser: DBUser ) => {
+            console.log( fDBUser );
+            // const user = new User( fUser.uid, fDBUser['name'], fUser.email );
+            this.store.dispatch( userAuth.setUser({
+              user: User.fromFirebase( fDBUser )
+            }) );
+          });
+      } else {
+        this.store.dispatch( userAuth.unsetUser() );
+      }
+
     });
   }
 
